@@ -1,0 +1,95 @@
+import java.text.SimpleDateFormat
+
+/**
+ * This Gradle script relies on Git tags to generate versions for your Android app
+ *
+ * - The Android version NAME is specified in the tag name and it's 3 digits long (example of a valid tag name: "v1.23.45")
+ *   If the tag name is not in a valid format, then the version name will be 0.0.0 and you should fix the tag.
+ *
+ * - The Android version CODE is calculated based on the version name (like this: (major * 1000000) + (minor * 10000) + (patch * 100))
+ *
+ * - The 4 digits version name is not "public" and the forth number represents the number of commits from the last tag (example: "1.23.45.178")
+ *
+ */
+
+ext {
+
+    getGitSha = {
+        return 'git rev-parse --short HEAD'.execute().text.trim()
+    }
+
+    getBuildTime = {
+        def df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'")
+        df.setTimeZone(TimeZone.getTimeZone("UTC"))
+        return df.format(new Date())
+    }
+
+    /**
+     * Git describe returns the following: [GIT_TAG_NAME]-[BUILD_NUMBER]-[GIT_SHA]
+     */
+    getAndroidGitDescribe = {
+        return "git -C ${rootDir} describe --tags --long".execute().text.trim()
+    }
+
+    /**
+     * Returns the current Git branch name
+     */
+    getGitBranch = {
+        return "git rev-parse --abbrev-ref HEAD".execute().text.trim()
+    }
+
+    /**
+     * Returns the full version name in the format: MM.mm.pp.ccc
+     *
+     * The version name is retrieved from the tag name which must be in the format: vMM.mm.pp, example: "v1.23.45"
+     */
+    getFullVersionName = {
+        def versionName = "0.0.0.0"
+        def (tag, buildNumber, gitSha) = getAndroidGitDescribe().tokenize('-')
+        if (tag && tag.startsWith("v")) {
+            def version = tag.substring(1)
+            if (version.tokenize('.').size() == 3) {
+                versionName = version + '.' + buildNumber
+            }
+        }
+        return versionName
+    }
+
+    /**
+     * Returns the Android version name
+     *
+     * Format "X.Y.Z", without commit number
+     */
+    getAndroidVersionName = {
+        def fullVersionName = getFullVersionName()
+        return fullVersionName.substring(0, fullVersionName.lastIndexOf('.'))
+    }
+
+    /**
+     * Returns the Android version code, deducted from the version name
+     *
+     * Integer value calculated from the version name
+     */
+    getAndroidVersionCode = {
+        def (major, minor, patch) = getAndroidVersionName().tokenize('.')
+        (major, minor, patch) = [major, minor, patch].collect{it.toInteger()}
+        return (major * 1000000) + (minor * 10000) + (patch * 100)
+    }
+
+    /**
+     * Return a pretty-printable string containing a summary of the version info
+     */
+    getVersionInfo = {
+        return "\nVERSION INFO:\n\tFull version name: " + getFullVersionName() +
+                "\n\tAndroid version name: " + getAndroidVersionName() +
+                "\n\tAndroid version code: " + getAndroidVersionCode() +
+                "\n\tAndroid Git branch: " + getGitBranch() +
+                "\n\tAndroid Git describe: " + getAndroidGitDescribe() +
+                "\n\tGit SHA: " + getGitSha() +
+                "\n\tBuild Time: " + getBuildTime() + "\n"
+    }
+
+    // Print version info at build time
+    println(getVersionInfo());
+}
+

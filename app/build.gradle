@@ -1,0 +1,83 @@
+import groovy.json.StringEscapeUtils;
+
+apply plugin: 'com.android.application'
+
+android {
+
+    configurations {
+        // ...
+    }
+
+    compileSdkVersion 22
+    buildToolsVersion "22.0.1"
+
+    defaultConfig {
+
+        minSdkVersion 17
+        targetSdkVersion 22
+
+        applicationId "app.example.com"
+
+        versionCode getAndroidVersionCode()
+        versionName getAndroidVersionName()
+
+        // Build config constants
+        buildConfigField "String", "GIT_SHA", "\"${getGitSha()}\""
+        buildConfigField "String", "BUILD_TIME", "\"${getBuildTime()}\""
+        buildConfigField "String", "FULL_VERSION_NAME", "\"${getVersionName()}\""
+        buildConfigField "String", "VERSION_DESCRIPTION", "\"${StringEscapeUtils.escapeJava(getVersionInfo())}\""
+    }
+
+    signingConfigs {
+        config {
+            keyAlias 'MyKeyAlias'
+            keyPassword 'MyKeyPassword'
+            storeFile file('my_key_store.keystore')
+            storePassword 'MyKeyStorePassword'
+        }
+    }
+
+    buildTypes {
+
+        debug {
+            minifyEnabled false
+            debuggable true
+        }
+
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.config
+            debuggable false
+        }
+
+    }
+
+    productFlavors {
+       // ...
+    }
+
+    dependencies {
+        // ...
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+}
+
+/**
+ * Save a build.info file
+ */
+task saveBuildInfo {
+    def buildInfo = getVersionInfo()
+    def assetsDir = android.sourceSets.main.assets.srcDirs.toArray()[0]
+    assetsDir.mkdirs()
+    def buildInfoFile = new File(assetsDir, 'build.info')
+    buildInfoFile.write(buildInfo)
+}
+
+gradle.projectsEvaluated {
+    assemble.dependsOn(saveBuildInfo)
+}

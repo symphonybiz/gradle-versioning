@@ -1,0 +1,16 @@
+apply from: 'versioning.gradle'
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:1.1.3'
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+    }
+}
