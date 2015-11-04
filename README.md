@@ -14,30 +14,30 @@ Call `git tag` to check that you created it correctly
 In your `build.gradle` file you can use the script to:
 * Automatically generate Android version name and version:
 ```
-    versionCode getAndroidVersionCode()
-    versionName getAndroidVersionName()
+  versionCode getAndroidVersionCode()
+  versionName getAndroidVersionName()
 ```
 
 * Save version information in Android BuildConfig constants, and access them at run time in the app:
 ```
-    buildConfigField "String", "GIT_SHA", "\"${getGitSha()}\""
-    buildConfigField "String", "BUILD_TIME", "\"${getBuildTime()}\""
-    buildConfigField "String", "FULL_VERSION_NAME", "\"${getVersionName()}\""
-    buildConfigField "String", "VERSION_DESCRIPTION", "\"${StringEscapeUtils.escapeJava(getVersionInfo())}\""
+  buildConfigField "String", "GIT_SHA", "\"${getGitSha()}\""
+  buildConfigField "String", "BUILD_TIME", "\"${getBuildTime()}\""
+  buildConfigField "String", "FULL_VERSION_NAME", "\"${getVersionName()}\""
+  buildConfigField "String", "VERSION_DESCRIPTION", "\"${StringEscapeUtils.escapeJava(getVersionInfo())}\""
 ```
 
 * Save a `build.info` file containg version information:
 ```
-    task saveBuildInfo {
-      def buildInfo = getVersionInfo()
-      def assetsDir = android.sourceSets.main.assets.srcDirs.toArray()[0]
-      assetsDir.mkdirs()
-      def buildInfoFile = new File(assetsDir, 'build.info')
-      buildInfoFile.write(buildInfo)
-    }
-    gradle.projectsEvaluated {
-      assemble.dependsOn(saveBuildInfo)
-    }
+  task saveBuildInfo {
+    def buildInfo = getVersionInfo()
+    def assetsDir = android.sourceSets.main.assets.srcDirs.toArray()[0]
+    assetsDir.mkdirs()
+    def buildInfoFile = new File(assetsDir, 'build.info')
+    buildInfoFile.write(buildInfo)
+  }
+  gradle.projectsEvaluated {
+    assemble.dependsOn(saveBuildInfo)
+  }
 ```
 
 Check out the `build.gradle` file in the `app` folder for an example of using the versioning API
